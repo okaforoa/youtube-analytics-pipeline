@@ -1,10 +1,10 @@
-# Spotify Data Pipeline
+# YouTube Analytics Data Pipeline
 
-An end-to-end data engineering project that extracts listening data from the Spotify API, processes it through a medallion architecture (Bronze → Silver → Gold), and creates analytics-ready datasets for insights.
+An end-to-end data engineering project that extracts trending video data from the YouTube Data API, processes it through a medallion architecture (Bronze → Silver → Gold), and creates analytics-ready datasets for insights.
 
 ## Architecture
 ```
-Spotify API → Python → AWS S3 (Bronze) → Snowflake → dbt (Silver/Gold) → Orchestrated by Airflow
+YouTube API → Python → AWS S3 (Bronze) → Snowflake → dbt (Silver/Gold) → Orchestrated by Airflow
 ```
 
 ## Tech Stack
@@ -20,7 +20,7 @@ Spotify API → Python → AWS S3 (Bronze) → Snowflake → dbt (Silver/Gold) �
 
 ## Project Structure
 ```
-spotify-data-pipeline/
+youtube-data-pipeline/
 ├── airflow/           # Airflow DAGs and configuration
 ├── dbt/              # dbt models and tests
 ├── src/              # Python source code
@@ -29,6 +29,34 @@ spotify-data-pipeline/
 └── .github/          # CI/CD workflows
 ```
 
+## Data Sources
+
+- YouTube trending videos by region
+- Video statistics (views, likes, comments, shares)
+- Channel information and subscriber counts
+- Video metadata (category, tags, duration)
+- Engagement metrics and ratios
+
+## Analytics Use Cases
+
+- Track trending content patterns over time
+- Analyze engagement rates (likes/views, comments/views)
+- Compare regional differences in content popularity
+- Monitor channel growth and performance
+- Identify successful video characteristics
+
+## Development Status
+
+- [x] Project structure setup
+- [x] Configuration management
+- [x] AWS S3 integration
+- [x] Snowflake connection
+- [ ] YouTube data extraction
+- [ ] Bronze layer ingestion
+- [ ] dbt transformations (Silver/Gold)
+- [ ] Airflow orchestration
+- [ ] Data quality checks
+
 ## Setup Instructions
 
 ### Prerequisites
@@ -36,12 +64,13 @@ spotify-data-pipeline/
 - Python 3.11+
 - Docker & Docker Compose
 - AWS Account
-- Snowflake Account (free trial)
-- Spotify Developer Account
+- Snowflake Account
+- Google Cloud Account (for YouTube Data API)
 
-### 1. Clone and Setup
+### Installation
 ```bash
-git clone <your-repo>
+# Clone repository
+git clone https://github.com/okaforoa/spotify-data-pipeline.git
 cd spotify-data-pipeline
 
 # Create virtual environment
@@ -50,64 +79,36 @@ source venv/Scripts/activate  # Windows Git Bash
 
 # Install dependencies
 pip install -r requirements.txt
-pip install -r requirements-dev.txt
 ```
 
-### 2. Configure Environment
+### Configuration
 ```bash
 # Copy environment template
 cp .env.example .env
 
 # Edit .env with your credentials
-nano .env  # or use your preferred editor
+# - YouTube API Key
+# - AWS credentials
+# - Snowflake credentials
 ```
-
-### 3. Setup Pre-commit Hooks
-```bash
-pre-commit install
-```
-
-## Development Status
-
-- [x] Project structure setup
-- [x] Configuration management
-- [x] Virtual environment and dependencies
-- [ ] Spotify data extraction
-- [ ] AWS S3 integration
-- [ ] Snowflake connection
-- [ ] dbt models
-- [ ] Airflow DAGs
-- [ ] Data quality checks
-- [ ] CI/CD pipeline
 
 ## Data Model
 
 ### Bronze Layer
-- Raw JSON data from Spotify API
+- Raw JSON responses from YouTube API
 
 ### Silver Layer
-- Cleaned, validated, and typed data
+- Cleaned and validated video data
+- Normalized channel information
 - Staging tables with data quality tests
 
 ### Gold Layer
 - Dimensional model (star schema)
-- `fact_listening_events`
-- `dim_tracks`
-- `dim_artists`
+- `fact_video_performance`
+- `dim_videos`
+- `dim_channels`
+- `dim_categories`
 - `dim_dates`
-
-## Monitoring & Quality
-
-- dbt test coverage: 95%+
-- Data freshness SLA: < 2 hours
-- Automated alerts on pipeline failures
-
-## Future Enhancements
-
-- [ ] Real-time streaming with Kafka
-- [ ] ML model for music recommendations
-- [ ] Dashboard with Metabase
-- [ ] Cost optimization with Snowflake clustering
 
 ## License
 
