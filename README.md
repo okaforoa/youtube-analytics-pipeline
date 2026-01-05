@@ -51,9 +51,9 @@ youtube-data-pipeline/
 - [x] Configuration management
 - [x] AWS S3 integration
 - [x] Snowflake connection
-- [ ] YouTube data extraction
-- [ ] Bronze layer ingestion
-- [ ] dbt transformations (Silver/Gold)
+- [x] YouTube data extraction
+- [x] Bronze layer ingestion
+- [x] dbt transformations (Silver/Gold)
 - [ ] Airflow orchestration
 - [ ] Data quality checks
 
