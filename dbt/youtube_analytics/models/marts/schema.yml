@@ -1,0 +1,57 @@
+version: 2
+
+models:
+  - name: dim_videos
+    description: "Dimension table for videos with all attributes"
+    columns:
+      - name: video_key
+        description: "Surrogate key for video dimension"
+        tests:
+          - unique
+          - not_null
+      - name: video_id
+        description: "Natural key - YouTube video ID"
+        tests:
+          - unique
+          - not_null
+          
+  - name: dim_channels
+    description: "Dimension table for channels"
+    columns:
+      - name: channel_key
+        description: "Surrogate key for channel dimension"
+        tests:
+          - unique
+          - not_null
+      - name: channel_id
+        description: "Natural key - YouTube channel ID"
+        tests:
+          - unique
+          - not_null
+          
+  - name: dim_categories
+    description: "Dimension table for video categories"
+    columns:
+      - name: category_key
+        description: "Surrogate key for category dimension"
+        tests:
+          - unique
+          - not_null
+          
+  - name: fact_video_performance
+    description: "Fact table for video performance metrics"
+    columns:
+      - name: video_key
+        description: "Foreign key to dim_videos"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_videos')
+              field: video_key
+      - name: channel_key
+        description: "Foreign key to dim_channels"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_channels')
+              field: channel_key
