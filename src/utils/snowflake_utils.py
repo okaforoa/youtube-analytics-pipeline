@@ -198,3 +198,23 @@ if __name__ == "__main__":
     print("\n" + "=" * 70)
     print("✅ Test complete!")
     print("=" * 70)
+
+    def truncate_table(self, table_name: str) -> bool:
+        """Truncate a table."""
+        try:
+            self.execute_query(f"TRUNCATE TABLE {table_name}")
+            print(f"✅ Truncated {table_name}")
+            return True
+        except Exception as e:
+            print(f"❌ Error truncating {table_name}: {e}")
+            return False
+
+    def truncate_table(self, table_name: str) -> bool:
+        """Truncate a table to remove all data."""
+        try:
+            self.execute_query(f"TRUNCATE TABLE {table_name}")
+            print(f"✅ Truncated {table_name}")
+            return True
+        except Exception as e:
+            print(f"❌ Error truncating {table_name}: {e}")
+            return False
