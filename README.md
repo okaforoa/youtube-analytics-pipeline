@@ -228,8 +228,8 @@ MIT License - feel free to use this project for learning or portfolio purposes.
 
 **Dion Okafor**
 - GitHub: [@okaforoa](https://github.com/okaforoa)
-- LinkedIn: [Add your LinkedIn]
-- Email: [Add your email]
+- LinkedIn: https://www.linkedin.com/in/dion-okafor
+- Email: dion.okafor@gmail.com
 
 ---
 
