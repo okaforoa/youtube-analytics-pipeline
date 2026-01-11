@@ -86,7 +86,10 @@ def extract_youtube_data(**context):
         )
         
         s3.upload_json(data=data_package, s3_key=s3_key)
-        print(f"✅ Uploaded {len(videos)} videos to S3")
+        print(f"✅ Uploaded {len(videos)} videos to S3: {s3_key}")
+        
+        # Push S3 key to XCom for downstream tasks
+        context['task_instance'].xcom_push(key='videos_s3_key', value=s3_key)
     
     # Extract categories
     categories = extractor.get_video_categories('US')
@@ -107,27 +110,34 @@ def extract_youtube_data(**context):
     )
     
     s3.upload_json(data=cat_data, s3_key=cat_key)
-    print(f"✅ Uploaded {len(categories)} categories to S3")
+    print(f"✅ Uploaded {len(categories)} categories to S3: {cat_key}")
     
     # Push metadata to XCom
+    context['task_instance'].xcom_push(key='categories_s3_key', value=cat_key)
     context['task_instance'].xcom_push(key='extraction_timestamp', value=timestamp.isoformat())
-    context['task_instance'].xcom_push(key='video_count', value=len(videos))
 
 
 def load_to_snowflake(**context):
-    """Load data from S3 to Snowflake."""
+    """Load ONLY the latest extraction from S3 to Snowflake."""
     from utils.snowflake_utils import SnowflakeHandler
     
     print("="*70)
     print("LOADING DATA TO SNOWFLAKE")
     print("="*70)
     
+    # Get the S3 keys from the extract task
+    videos_s3_key = context['task_instance'].xcom_pull(task_ids='extract_youtube_data', key='videos_s3_key')
+    categories_s3_key = context['task_instance'].xcom_pull(task_ids='extract_youtube_data', key='categories_s3_key')
+    
+    print(f"Loading videos from: {videos_s3_key}")
+    print(f"Loading categories from: {categories_s3_key}")
+    
     sf = SnowflakeHandler()
     
     if not sf.connect():
         raise Exception("Failed to connect to Snowflake")
     
-    # TRUNCATE tables first to avoid duplicates
+    # TRUNCATE tables first
     print("Truncating tables to remove old data...")
     sf.execute_query("TRUNCATE TABLE RAW.TRENDING_VIDEOS_RAW")
     print("✅ Truncated TRENDING_VIDEOS_RAW")
@@ -135,19 +145,30 @@ def load_to_snowflake(**context):
     sf.execute_query("TRUNCATE TABLE RAW.VIDEO_CATEGORIES_RAW")
     print("✅ Truncated VIDEO_CATEGORIES_RAW")
     
-    # Load trending videos
-    sf.load_from_s3(
-        s3_path='trending_videos/',
-        table_name='RAW.TRENDING_VIDEOS_RAW',
-        file_format='JSON'
-    )
+    # Load ONLY the specific files from this run
+    sf.execute_query(f"""
+        COPY INTO RAW.TRENDING_VIDEOS_RAW
+        FROM 's3://{os.getenv('S3_BUCKET_NAME')}/{videos_s3_key}'
+        CREDENTIALS = (
+            AWS_KEY_ID = '{os.getenv('AWS_ACCESS_KEY_ID')}'
+            AWS_SECRET_KEY = '{os.getenv('AWS_SECRET_ACCESS_KEY')}'
+        )
+        FILE_FORMAT = (TYPE = 'JSON')
+        MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE
+    """)
+    print(f"✅ Loaded videos from {videos_s3_key}")
     
-    # Load categories
-    sf.load_from_s3(
-        s3_path='video_categories/',
-        table_name='RAW.VIDEO_CATEGORIES_RAW',
-        file_format='JSON'
-    )
+    sf.execute_query(f"""
+        COPY INTO RAW.VIDEO_CATEGORIES_RAW
+        FROM 's3://{os.getenv('S3_BUCKET_NAME')}/{categories_s3_key}'
+        CREDENTIALS = (
+            AWS_KEY_ID = '{os.getenv('AWS_ACCESS_KEY_ID')}'
+            AWS_SECRET_KEY = '{os.getenv('AWS_SECRET_ACCESS_KEY')}'
+        )
+        FILE_FORMAT = (TYPE = 'JSON')
+        MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE
+    """)
+    print(f"✅ Loaded categories from {categories_s3_key}")
     
     # Get row counts
     video_count = sf.get_row_count('RAW.TRENDING_VIDEOS_RAW')
